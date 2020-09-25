@@ -1,13 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
-using Android.App;
+﻿using Android.App;
+using Android.Content;
 using Android.OS;
-using Android.Runtime;
-using Android.Support.Design.Widget;
 using Android.Support.V7.App;
-using Android.Views;
 using Android.Widget;
 
 namespace NotissimusApp
@@ -22,8 +16,9 @@ namespace NotissimusApp
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
 
-            var url = @"https://yastatic.net/market-export/_/partner/help/YML.xml";
+            var url = @"http://partner.market.yandex.ru/pages/help/YML.xml";
             var xmlObject = Controller.GetXmlAsync<yml_catalog>(url).Result;
+            
 
             var listId = Controller.GetOffersId(xmlObject);
 
@@ -32,7 +27,9 @@ namespace NotissimusApp
 
             mainList.ItemClick += (sender, e) =>
             {
-                //TO DO
+                JsonActivity.OfferPosition = e.Position;
+
+                StartActivity(new Intent(Application.Context, typeof(JsonActivity)));
             };
         }
     }
