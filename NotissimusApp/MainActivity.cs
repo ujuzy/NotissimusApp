@@ -11,14 +11,13 @@ namespace NotissimusApp
     {
         private ListView mainList;
 
-        protected override void OnCreate(Bundle savedInstanceState)
+        protected override async void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
 
             var url = @"http://partner.market.yandex.ru/pages/help/YML.xml";
-            var xmlObject = Controller.GetXmlAsync<yml_catalog>(url).Result;
-            
+            var xmlObject = await Controller.GetXmlAsync<yml_catalog>(url);
 
             var listId = Controller.GetOffersId(xmlObject);
 
@@ -27,9 +26,10 @@ namespace NotissimusApp
 
             mainList.ItemClick += (sender, e) =>
             {
-                JsonActivity.OfferPosition = e.Position;
+                var jsonActivity = new Intent(Application.Context, typeof(JsonActivity));
+                jsonActivity.PutExtra("offerPosition", e.Position);
 
-                StartActivity(new Intent(Application.Context, typeof(JsonActivity)));
+                StartActivity(jsonActivity);
             };
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,15 +19,13 @@ namespace NotissimusApp
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = "GET";
 
-            using (var response = request.GetResponseAsync())
+            using (var response = await request.GetResponseAsync())
             {
-                response.Wait();
-
-                using (var stream = ((HttpWebResponse) response.Result).GetResponseStream())
+                using (var stream = ((HttpWebResponse) response).GetResponseStream())
                 {
                     using (var reader = new StreamReader(stream, Encoding.GetEncoding("windows-1251"), true))
                     {
-                        return (T) XmlDeserializeFromString(reader.ReadToEnd(), typeof(T));
+                        return (T) XmlDeserializeFromString(await reader.ReadToEndAsync(), typeof(T));
                     }
                 }
             }
@@ -45,9 +44,9 @@ namespace NotissimusApp
                 {
                     using (var reader = new StreamReader(stream, Encoding.GetEncoding("windows-1251"), true))
                     {
-                        XmlDocument doc = new XmlDocument();
-                        doc.LoadXml(reader.ReadToEnd());
-                        XmlElement root = doc.DocumentElement;
+                        var doc = new XmlDocument();
+                        doc.LoadXml(await reader.ReadToEndAsync());
+                        var root = doc.DocumentElement;
 
                         return root;
                     }
@@ -70,19 +69,16 @@ namespace NotissimusApp
 
         public static List<string> GetOffersId(yml_catalog catalog)
         {
-            List<string> idList = new List<string>();
-
-            foreach (var offer in catalog.shop.offers)
-            {
-                idList.Add(offer.id.ToString());
-            }
+            var idList = catalog.shop.offers
+                .Select(x => x.id.ToString())
+                .ToList();
 
             return idList;
         }
 
         public static string GetJsonFromXml(string xml)
         {
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
             doc.LoadXml(xml);
 
             return new string(JsonConvert.SerializeXmlNode(doc, Newtonsoft.Json.Formatting.Indented, true));
@@ -92,9 +88,9 @@ namespace NotissimusApp
         {
             foreach (XmlNode node in root.ChildNodes)
             {
-                foreach (XmlNode childnote in node)
+                foreach (XmlNode childNote in node)
                 {
-                    if (childnote.Name == "offers")
+                    if (childNote.Name == "offers")
                     {
                         using (var sw = new StringWriter())
                         {
@@ -102,7 +98,7 @@ namespace NotissimusApp
                             {
                                 xw.Formatting = System.Xml.Formatting.Indented;
                                 xw.Indentation = 2;
-                                childnote.WriteTo(xw);
+                                childNote.WriteTo(xw);
                             }
 
                             return sw.ToString();
